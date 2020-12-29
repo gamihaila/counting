@@ -20,7 +20,6 @@ public class WindowCounter {
   public void add(long tsDeciMillis) {
     expire(tsDeciMillis);
     buckets.add(0, new Bucket(tsDeciMillis));
-    dump();
     merge();
   }
 
@@ -38,26 +37,8 @@ public class WindowCounter {
     return sum;
   }
 
-  public void cleanup(int tsDeciMillis) {
-    expire(tsDeciMillis);
-  }
-
-  public void dump() {
-    for (Bucket bucket : buckets) {
-      System.out.print("[" + bucket.ts + ", " + bucket.count + "] ");
-    }
-    System.out.println();
-  }
-
-  private int tsDiff(int ts1, int ts2) {
-    return ModuloInteger.mod(ts1 - ts2, width);
-  }
-
   private void expire(long tsDeciMillis) {
-    if (buckets.removeIf(bucket -> bucket.ts < tsDeciMillis - width)) {
-      System.out.println("Removed expired buckets");
-      dump();
-    }
+    buckets.removeIf(bucket -> bucket.ts < tsDeciMillis - width);
   }
 
   private int countSameSizeBuckets(int start) {
@@ -77,10 +58,8 @@ public class WindowCounter {
     for (int i = 0; i < buckets.size(); i++) {
       if (countSameSizeBuckets(i) == k / 2 + 2) {
         final int mergeIndex = i + k / 2;
-        System.out.println("Merging buckets " + mergeIndex + " and " + (mergeIndex + 1));
         buckets.get(mergeIndex).count *= 2;
         buckets.remove(mergeIndex + 1);
-        dump();
       }
     }
   }
